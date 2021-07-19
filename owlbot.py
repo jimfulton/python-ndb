@@ -21,24 +21,22 @@ sudo apt-get -y install dictionaries-common aspell aspell-en \\
 
 s.replace(".kokoro/build.sh", """(export PROJECT_ID=.*)""", """\g<1>
 
-if [[ -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
-  # Configure local Redis to be used
-  export REDIS_CACHE_URL=redis://localhost
-  redis-server &
+# Configure local Redis to be used
+export REDIS_CACHE_URL=redis://localhost
+redis-server &
 
-  # Configure local memcached to be used
-  export MEMCACHED_HOSTS=127.0.0.1
-  service memcached start
+# Configure local memcached to be used
+export MEMCACHED_HOSTS=127.0.0.1
+service memcached start
 
-  # Install gcloud SDK
-  mkdir -p /tmp/gcloud
-  curl -sSL https://sdk.cloud.google.com | bash -s -- --install-dir=/tmp/gcloud
-  export PATH=$PATH:/tmp/gcloud/google-cloud-sdk/bin
+# Install gcloud SDK
+mkdir -p /tmp/gcloud
+curl -sSL https://sdk.cloud.google.com | bash -s -- --install-dir=/tmp/gcloud
+export PATH=$PATH:/tmp/gcloud/google-cloud-sdk/bin
 
-  # Some system tests require indexes. Use gcloud to create them.
-  gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS --project=$PROJECT_ID
-  gcloud --quiet --verbosity=debug datastore indexes create tests/system/index.yaml
-fi
+# Some system tests require indexes. Use gcloud to create them.
+gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS --project=$PROJECT_ID
+gcloud --quiet --verbosity=debug datastore indexes create tests/system/index.yaml
 """)
 
 s.replace(
