@@ -33,17 +33,24 @@ export GOOGLE_APPLICATION_CREDENTIALS=${KOKORO_GFILE_DIR}/service-account.json
 # Setup project id.
 export PROJECT_ID=$(cat "${KOKORO_GFILE_DIR}/project-id.json")
 
-# Configure local Redis to be used
-export REDIS_CACHE_URL=redis://localhost
-redis-server &
+if [[ -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
+  # Configure local Redis to be used
+  export REDIS_CACHE_URL=redis://localhost
+  redis-server &
 
-# Configure local memcached to be used
-export MEMCACHED_HOSTS=127.0.0.1
-service memcached start
+  # Configure local memcached to be used
+  export MEMCACHED_HOSTS=127.0.0.1
+  service memcached start
 
-# Some system tests require indexes. Use gcloud to create them.
-gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS --project=$PROJECT_ID
-gcloud --quiet --verbosity=debug datastore indexes create tests/system/index.yaml
+  # Install gcloud SDK
+  mkdir -p /tmp/gcloud
+  curl -sSL https://sdk.cloud.google.com | bash -s -- --install-dir=/tmp/gcloud
+  export PATH=$PATH:/tmp/gcloud/google-cloud-sdk/bin
+
+  # Some system tests require indexes. Use gcloud to create them.
+  gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS --project=$PROJECT_ID
+  gcloud --quiet --verbosity=debug datastore indexes create tests/system/index.yaml
+fi
 
 
 # Remove old nox
